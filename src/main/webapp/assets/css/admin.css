@@ -1,0 +1,42 @@
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+h3 {
+  color: #007bff;
+  margin-top: 30px;
+}
+
+/* Task Summary */
+ul {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  justify-content: center;
+}
+ul li {
+  background: linear-gradient(45deg, #ff6b6b, #feca57);
+  margin: 5px;
+  padding: 15px 20px;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: bold;
+  min-width: 120px;
+  text-align: center;
+  transition: transform 0.3s;
+}
+ul li:nth-child(2) {
+  background: linear-gradient(45deg, #48dbfb, #1dd1a1);
+}
+ul li:nth-child(3) {
+  background: linear-gradient(45deg, #10ac84, #2ecc71);
+}
+ul li:nth-child(4) {
+  background: linear-gradient(45deg, #ff9f43, #e17055);
+}
+ul li:hover {
+  transform: translateY(-5px);
+}

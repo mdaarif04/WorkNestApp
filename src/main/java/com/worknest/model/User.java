@@ -1,11 +1,13 @@
 package com.worknest.model;
 
+import java.util.List;
+
 import javax.persistence.*;
 
 @Entity
 @Table(name="users")
 public class User {
-    @Id
+	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
@@ -20,6 +22,9 @@ public class User {
 
     @Column(nullable=false)
     private String role; // ADMIN or USER
+
+    @ManyToMany(mappedBy = "users")
+    private List<Task> tasks;
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }

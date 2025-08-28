@@ -33,9 +33,7 @@ public class UserService {
         }
     }
 
-//	public void delete(int userId) {
-//		// TODO Auto-generated method stub
-//		
-//	}
+	
+
 
 }

@@ -1,0 +1,20 @@
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+table {
+  margin-top: 20px;
+}
+form {
+  display: inline-block;
+  margin: 3px;
+}
+select {
+  min-width: 120px;
+}
+button {
+  font-size: 12px;
+  padding: 6px 10px;
+}

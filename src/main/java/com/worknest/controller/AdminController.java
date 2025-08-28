@@ -35,16 +35,6 @@ public class AdminController {
     @Autowired
     private CommentService commentService;
 
-//    @GetMapping("/dashboard")
-//    public String dashboard(HttpSession session, Model model){
-//        User u = (User) session.getAttribute("user");
-//        if(u == null || !"ADMIN".equalsIgnoreCase(u.getRole())){
-//            return "redirect:/login";
-//        }
-//        model.addAttribute("users", userService.all());
-//        model.addAttribute("tasks", taskService.all());
-//        return "admin-dashboard";
-//    }
     
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model){
@@ -53,18 +43,31 @@ public class AdminController {
             return "redirect:/login";
         }
 
+        List<Task> allTasks = taskService.all();
         model.addAttribute("users", userService.all());
-        model.addAttribute("tasks", taskService.all());
+        model.addAttribute("tasks", allTasks);
 
         // map each task to its comments
         Map<Integer, List<Comment>> taskComments = new HashMap<>();
-        for(Task t : taskService.all()){
+        for(Task t : allTasks){
             taskComments.put(t.getId(), commentService.forTask(t));
         }
         model.addAttribute("taskComments", taskComments);
 
+        // ✅ count tasks by status
+        long pendingCount = allTasks.stream().filter(t -> "PENDING".equalsIgnoreCase(t.getStatus())).count();
+        long inProgressCount = allTasks.stream().filter(t -> "IN_PROGRESS".equalsIgnoreCase(t.getStatus())).count();
+        long completedCount = allTasks.stream().filter(t -> "COMPLETED".equalsIgnoreCase(t.getStatus())).count();
+        long delayedCount = allTasks.stream().filter(t -> "DELAYED".equalsIgnoreCase(t.getStatus())).count();
+
+        model.addAttribute("pendingCount", pendingCount);
+        model.addAttribute("inProgressCount", inProgressCount);
+        model.addAttribute("completedCount", completedCount);
+        model.addAttribute("delayedCount", delayedCount);
+
         return "admin-dashboard";
     }
+
     
     
     @PostMapping("/users/delete")
@@ -88,6 +91,8 @@ public class AdminController {
         model.addAttribute("users", userService.all());
         return "edit-task";
     }
+    
+    
 
     @PostMapping("/tasks/edit")
     public String editTask(@RequestParam int id,
@@ -96,30 +101,59 @@ public class AdminController {
                            @RequestParam String status,
                            @RequestParam(required=false) String startDate,
                            @RequestParam(required=false) String dueDate,
-                           @RequestParam int userId) {
+                           @RequestParam(value="userIds", required=false) List<Integer> userIds) {
 
         Date start = (startDate==null || startDate.isEmpty()) ? null : Date.valueOf(startDate);
         Date due = (dueDate==null || dueDate.isEmpty()) ? null : Date.valueOf(dueDate);
 
-        taskService.update(id, title, description, status, start, due, userService.byId(userId));
+        // get existing task
+        Task task = taskService.byId(id);
+        task.setTitle(title);
+        task.setDescription(description);
+        task.setStatus(status);
+        task.setStartDate(start);
+        task.setDueDate(due);
+
+        if (userIds != null && !userIds.isEmpty()) {
+            List<User> selectedUsers = userIds.stream()
+                    .map(uid -> userService.byId(uid))
+                    .toList();
+            task.setUsers(selectedUsers);
+        } else {
+            task.setUsers(null); 
+        }
+
+        taskService.save(task); 
         return "redirect:/admin/dashboard";
     }
 
 
 
-
-    
-
     @PostMapping("/tasks/allocate")
-    public String allocate(@RequestParam String title,
+    public String allocate(@RequestParam String taskCode,
+                           @RequestParam String title,
                            @RequestParam(required=false) String description,
                            @RequestParam(required=false) String startDate,
                            @RequestParam(required=false) String dueDate,
-                           @RequestParam int userId){
+                           @RequestParam List<Integer> userIds) {
         Date start = (startDate==null || startDate.isEmpty()) ? null : Date.valueOf(startDate);
         Date due = (dueDate==null || dueDate.isEmpty()) ? null : Date.valueOf(dueDate);
-        User assignee = userService.byId(userId);
-        taskService.allocate(title, description, start, due, assignee);
+        List<User> users = userIds.stream().map(id -> userService.byId(id)).toList();
+
+        Task t = new Task();
+        t.setTaskCode(taskCode); // <-- manual ID
+        t.setTitle(title);
+        t.setDescription(description);
+        t.setStartDate(start);
+        t.setDueDate(due);
+        t.setStatus("PENDING");
+        t.setUsers(users);
+
+        taskService.save(t);
         return "redirect:/admin/dashboard";
     }
+
+    
+    
+
 }

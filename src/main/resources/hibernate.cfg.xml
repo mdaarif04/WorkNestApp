@@ -20,5 +20,7 @@
       <!--  Annotation enitites -->
       
       <mapping class="com.example.hiborm.model.Employee"/>  
+      
+      
    </session-factory>  
 </hibernate-configuration>

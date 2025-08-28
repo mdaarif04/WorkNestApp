@@ -2,7 +2,6 @@ package com.worknest.model;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
-import java.util.List;
 
 @Entity
 @Table(name="comments")

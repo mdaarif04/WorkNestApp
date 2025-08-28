@@ -2,6 +2,8 @@ package com.worknest.dao;
 
 import com.worknest.model.Task;
 import com.worknest.model.User;
+
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,11 +28,12 @@ public class TaskDAO {
         return sessionFactory.getCurrentSession().createQuery("from Task", Task.class).list();
     }
 
-    public List<Task> findByUser(User user){
-        Query<Task> q = sessionFactory.getCurrentSession()
-                .createQuery("from Task where user=:u", Task.class);
-        q.setParameter("u", user);
-        return q.list();
+    public List<Task> findByUser(User user) {
+        Session session = sessionFactory.getCurrentSession();
+        String hql = "select distinct t from Task t join t.users u where u = :u";
+        return session.createQuery(hql, Task.class)
+                      .setParameter("u", user)
+                      .getResultList();
     }
     
     public void delete(Task task){

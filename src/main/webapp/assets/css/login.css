@@ -1,0 +1,30 @@
+
+body {
+  background: linear-gradient(to right, #ffecd2, #fcb69f);
+  font-family: 'Segoe UI', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+
+form {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  max-width: 800px;
+  margin: 40px auto;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.alert {
+  background: #ff6b6b;
+  padding: 10px;
+  border-radius: 6px;
+  color: white;
+  margin-bottom: 10px;
+}
+form input {
+  margin-bottom: 12px;
+}

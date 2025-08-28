@@ -27,6 +27,4 @@ public class CommentService {
     public List<Comment> forTask(Task task){
         return commentDAO.findByTask(task);
     }
-    
-    
 }

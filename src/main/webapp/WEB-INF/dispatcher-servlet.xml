@@ -16,7 +16,7 @@
   <!-- Enable @Controller, @RequestMapping, etc -->
   <mvc:annotation-driven />
 
-  <!-- ✅ Static resources mapping (must be OUTSIDE of beans) -->
+<!-- For assests -->
   <mvc:resources mapping="/assets/**" location="/assets/" />
 
   <!-- View Resolver -->
