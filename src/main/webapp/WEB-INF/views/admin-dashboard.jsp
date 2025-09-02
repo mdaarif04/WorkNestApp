@@ -5,6 +5,11 @@
 <link rel="stylesheet" href="<c:url value='/assets/css/common.css'/>">
 <link rel="stylesheet" href="<c:url value='/assets/css/admin.css'/>">
 
+<button><a href="<c:url value='/admin/tasks/allocate'/>">Allocate Task</a></button>
+<button><a href="<c:url value='/admin/users'/>">Users</a></button>
+
+
+
 <h2>Admin Dashboard</h2>
 
 <h3>Task Summary</h3>
@@ -15,49 +20,12 @@
   <li>Delayed: ${delayedCount}</li>
 </ul>
 
-<h3>Users</h3>
-<table border="1">
-  <thead>
-    <tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr>
-  </thead>
-  <tbody>
-    <c:forEach var="u" items="${users}">
-      <c:if test="${u.role ne 'ADMIN'}"> <!-- hide admin -->
-        <tr>
-          <td>${u.id}</td>
-          <td>${u.name}</td>
-          <td>${u.email}</td>
-          <td>${u.role}</td>
-          <td>
-            <form method="post" action="<c:url value='/admin/users/delete'/>" style="display:inline;">
-              <input type="hidden" name="userId" value="${u.id}"/>
-              <button type="submit">Delete</button>
-            </form>
-          </td>
-        </tr>
-      </c:if>
-    </c:forEach>
-  </tbody>
-</table>
 
-<h3>Allocate Task (Multiple Users)</h3>
-<form method="post" action="<c:url value='/admin/tasks/allocate'/>">
-  <label>Task Code </label>
-  <input name="taskCode" required/>
 
-  <label>Title</label><input name="title" required/>
-  <label>Description</label><textarea name="description"></textarea>
-  <label>Start Date</label><input type="date" name="startDate"/>
-  <label>Due Date</label><input type="date" name="dueDate"/>
-  
-<label>Assign To:</label><br>
-<c:forEach var="user" items="${users}">
-    <input type="checkbox" name="userIds" value="${user.id}">
-    ${user.name}<br>
-</c:forEach>
-  
-  <button type="submit">Allocate</button>
-</form>
+
+
+
+
 
 <h3>All Tasks</h3>
 <table border="1">
@@ -94,5 +62,7 @@
     </c:forEach>
   </tbody>
 </table>
+
+
 
 <jsp:include page="_footer.jsp"/>

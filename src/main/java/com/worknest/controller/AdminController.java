@@ -34,6 +34,8 @@ public class AdminController {
     
     @Autowired
     private CommentService commentService;
+    
+    
 
     
     @GetMapping("/dashboard")
@@ -152,6 +154,22 @@ public class AdminController {
         taskService.save(t);
         return "redirect:/admin/dashboard";
     }
+    
+    @GetMapping("/tasks/allocate")
+    public String allocatePage(Model model) {
+        List<User> users = userService.all();   
+        model.addAttribute("users", users);    
+        return "allocate"; // allocate.jsp
+    }
+    
+    
+    @GetMapping("/users")
+    public String showUsers(Model model) {
+        List<User> users = userService.all();  // Example service call
+        model.addAttribute("users", users);
+        return "users";  // this should match a JSP file name
+    }
+
 
     
     

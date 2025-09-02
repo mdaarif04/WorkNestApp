@@ -61,7 +61,7 @@ public class TaskController {
         User newUser = userService.byId(newUserId);
         taskService.reassign(taskId, newUser);
 
-        redirectAttributes.addFlashAttribute("msg", "✅ Task reassigned successfully to " + newUser.getName() + "!");
+        redirectAttributes.addFlashAttribute("msg", "Task reassigned successfully to " + newUser.getName() + "!");
         return "redirect:/user/tasks";
     }
     
@@ -97,6 +97,16 @@ public class TaskController {
             commentService.add(t, u, content);
         }
         return "redirect:/user/tasks";
+    }
+    
+    
+    @GetMapping("/tasks/allocate")
+    public String allocatePage(Model model) {
+        // saare users laao (except admin agar chahiye to filter kar lena)
+        List<User> users = userService.all();
+        model.addAttribute("users", users);
+
+        return "allocate"; // ye allocate.jsp open karega
     }
     
 //    @GetMapping("/tasks/{taskId}")

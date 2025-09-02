@@ -10,7 +10,7 @@
   <tbody>
     <c:forEach var="t" items="${tasks}">
       <tr>
-        <td>${t.id}</td>
+        <td>${t.taskCode}</td>
         <td>${t.title}</td>
         <td>${t.status}</td>
         <td>${t.dueDate}</td>
