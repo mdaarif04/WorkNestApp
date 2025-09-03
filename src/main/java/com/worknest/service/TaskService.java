@@ -113,6 +113,57 @@ public class TaskService {
             }
         }
     }
+    
+    
+    
+ // UPDATED: reassign with locking & return updated Task
+    public Task reassignAndLockSender(int taskId, User toUser, User fromUser){
+        Task t = taskDAO.findById(taskId);
+        if(t != null){
+            List<User> assigned = t.getUsers();
+            if(!assigned.contains(toUser)) {
+                assigned.add(toUser);
+            }
+            t.setUsers(assigned);
+
+            // lock the sender so they can't act any more
+            t.lockUser(fromUser.getId());
+
+            taskDAO.save(t);
+        }
+        return t;
+    }
+
+    // UPDATED: forward also locks sender
+    public Task forwardAndLockSender(int taskId, int toUserId, int senderId){
+        Task t = taskDAO.findById(taskId);
+        if(t != null){
+            User u = userDAO.findById(toUserId);
+            if(!t.getUsers().contains(u)){
+                t.getUsers().add(u);
+            }
+            // lock the sender
+            t.lockUser(senderId);
+            taskDAO.save(t);
+        }
+        return t;
+    }
+
+    public void unlockAll(int taskId){
+        Task t = taskDAO.findById(taskId);
+        if(t != null){
+            t.clearLocks();
+            taskDAO.save(t);
+        }
+    }
+
+    public void setPermanentFinished(int taskId, boolean finished){
+        Task t = taskDAO.findById(taskId);
+        if(t != null){
+            t.setPermanentlyFinished(finished);
+            taskDAO.save(t);
+        }
+    }
 
 	
 	

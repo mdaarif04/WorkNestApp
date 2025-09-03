@@ -14,11 +14,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.worknest.model.Comment;
+import com.worknest.model.ReassignLog;
 import com.worknest.model.Task;
 import com.worknest.model.User;
 import com.worknest.service.CommentService;
+import com.worknest.service.ReassignLogService;
 import com.worknest.service.TaskService;
 import com.worknest.service.UserService;
 
@@ -35,6 +38,9 @@ public class AdminController {
     @Autowired
     private CommentService commentService;
     
+    @Autowired
+    private ReassignLogService reassignLogService;
+    
     
 
     
@@ -45,18 +51,16 @@ public class AdminController {
             return "redirect:/login";
         }
 
-        List<Task> allTasks = taskService.all();
+        List<Task> allTasks = taskService.all(); // already filtered to permanentlyFinished=false
         model.addAttribute("users", userService.all());
         model.addAttribute("tasks", allTasks);
 
-        // map each task to its comments
         Map<Integer, List<Comment>> taskComments = new HashMap<>();
         for(Task t : allTasks){
             taskComments.put(t.getId(), commentService.forTask(t));
         }
         model.addAttribute("taskComments", taskComments);
 
-        // ✅ count tasks by status
         long pendingCount = allTasks.stream().filter(t -> "PENDING".equalsIgnoreCase(t.getStatus())).count();
         long inProgressCount = allTasks.stream().filter(t -> "IN_PROGRESS".equalsIgnoreCase(t.getStatus())).count();
         long completedCount = allTasks.stream().filter(t -> "COMPLETED".equalsIgnoreCase(t.getStatus())).count();
@@ -66,6 +70,9 @@ public class AdminController {
         model.addAttribute("inProgressCount", inProgressCount);
         model.addAttribute("completedCount", completedCount);
         model.addAttribute("delayedCount", delayedCount);
+
+        // NEW: reassignment logs
+        model.addAttribute("reassignLogs", reassignLogService.allNewestFirst());
 
         return "admin-dashboard";
     }
@@ -170,6 +177,32 @@ public class AdminController {
         return "users";  // this should match a JSP file name
     }
 
+    
+    // NEW: Resume (unlock all)
+    @PostMapping("/tasks/resume")
+    public String resumeTask(@RequestParam int taskId, RedirectAttributes redirectAttributes) {
+        taskService.unlockAll(taskId);
+        redirectAttributes.addFlashAttribute("msg", "✅ Task " + taskId + " resumed successfully!");
+        return "redirect:/admin/dashboard";
+    }
+    
+ // NEW: Permanent finish (soft-finish: hide everywhere, not deleted)
+    @PostMapping("/tasks/permanent-finish")
+    public String permanentFinish(@RequestParam int taskId, RedirectAttributes redirectAttributes) {
+        taskService.setPermanentFinished(taskId, true);
+        redirectAttributes.addFlashAttribute("msg", "🏁 Task " + taskId + " finished permanently!");
+        return "redirect:/admin/dashboard";
+    }
+    
+    @GetMapping("/notification")
+    public String notificationPage(Model model) {
+        // fetch reassign logs
+        List<ReassignLog> logs = reassignLogService.allNewestFirst();
+        model.addAttribute("reassignLogs", logs);
+
+        return "notification"; // create admin-notification.jsp
+    }
+    
 
     
     

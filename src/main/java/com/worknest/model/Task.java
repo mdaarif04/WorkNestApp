@@ -2,6 +2,7 @@ package com.worknest.model;
 
 import javax.persistence.*;
 import java.sql.Date;
+import java.util.Arrays;
 import java.util.List;
 
 @Entity
@@ -24,6 +25,14 @@ public class Task {
 
     private Date startDate;
     private Date dueDate;
+    
+ // NEW: soft-finish flag (hide from lists but keep in DB)
+    @Column(nullable = false)
+    private boolean permanentlyFinished = false;
+
+    // NEW: comma-separated user IDs who are locked out (cannot act)
+    @Column(name="lockedForUserIds")
+    private String lockedUserIds; // e.g., "3,7,12"
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -32,8 +41,9 @@ public class Task {
         inverseJoinColumns = @JoinColumn(name="user_id")
     )
     private List<User> users;
-
-    // getters & setters
+    
+    
+	// getters & setters
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     public String getTitle() { return title; }
@@ -51,4 +61,34 @@ public class Task {
     
     public String getTaskCode() { return taskCode; }
     public void setTaskCode(String taskCode) { this.taskCode = taskCode; }
+    
+    
+    public boolean isPermanentlyFinished() { return permanentlyFinished; }
+    public void setPermanentlyFinished(boolean permanentlyFinished) { this.permanentlyFinished = permanentlyFinished; }
+
+    public String getLockedUserIds() { return lockedUserIds; }
+    public void setLockedUserIds(String lockedUserIds) { this.lockedUserIds = lockedUserIds; }
+
+    // Helpers
+    @Transient
+    public boolean isLockedForUser(int userId) {
+        if (lockedUserIds == null || lockedUserIds.trim().isEmpty()) return false;
+        return Arrays.stream(lockedUserIds.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .anyMatch(s -> Integer.toString(userId).equals(s));
+    }
+
+    public void lockUser(int userId){
+        if (isLockedForUser(userId)) return;
+        if (lockedUserIds == null || lockedUserIds.trim().isEmpty()){
+            lockedUserIds = Integer.toString(userId);
+        } else {
+            lockedUserIds = lockedUserIds + "," + userId;
+        }
+    }
+
+    public void clearLocks(){
+        this.lockedUserIds = null;
+    }
 }

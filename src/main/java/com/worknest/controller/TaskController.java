@@ -1,19 +1,25 @@
 package com.worknest.controller;
 
-import com.worknest.model.Task;
-import com.worknest.model.User;
-import com.worknest.service.CommentService;
-import com.worknest.service.TaskService;
-import com.worknest.service.UserService;
+import java.util.List;
+
+import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import javax.servlet.http.HttpSession;
-import java.util.List;
+import com.worknest.model.Task;
+import com.worknest.model.User;
+import com.worknest.service.CommentService;
+import com.worknest.service.ReassignLogService;
+import com.worknest.service.TaskService;
+import com.worknest.service.UserService;
 
 @Controller
 @RequestMapping("/user")
@@ -25,6 +31,8 @@ public class TaskController {
     private CommentService commentService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private ReassignLogService reassignLogService;
 
     @GetMapping("/tasks")
     public String myTasks(HttpSession session, Model model, 
@@ -34,65 +42,86 @@ public class TaskController {
             return "redirect:/login"; 
         }
 
-        // Current user's tasks
         List<Task> tasks = taskService.byUser(u);
         model.addAttribute("tasks", tasks);
-
-        // All non-admin users for reassign dropdown
-        List<User> users = userService.all();
-        model.addAttribute("users", users);
-
-        // Flash message (agar hai to)
+        model.addAttribute("users", userService.all());
+        model.addAttribute("currentUser", u); // NEW: for JSP lock checks
         if(msg != null && !msg.isEmpty()){
             model.addAttribute("msg", msg);
         }
-
         return "user-tasks";
     }
 
     @PostMapping("/tasks/reassign")
-    public String reassignTask(@RequestParam int taskId, 
-                               @RequestParam int newUserId, 
+    public String reassignTask(@RequestParam(required = false) Integer taskId,
+                               @RequestParam(required = false) Integer newUserId,
                                HttpSession session,
                                RedirectAttributes redirectAttributes){
-        User u = (User) session.getAttribute("user");
-        if(u == null) return "redirect:/login";
+        User sender = (User) session.getAttribute("user");
+        if(sender == null) return "redirect:/login";
 
-        User newUser = userService.byId(newUserId);
-        taskService.reassign(taskId, newUser);
+        if(taskId == null || newUserId == null){
+            redirectAttributes.addFlashAttribute("msg", "❌ Task or User ID missing!");
+            return "redirect:/user/tasks";
+        }
 
-        redirectAttributes.addFlashAttribute("msg", "Task reassigned successfully to " + newUser.getName() + "!");
+        User toUser = userService.byId(newUserId);
+        Task task = taskService.reassignAndLockSender(taskId, toUser, sender);
+
+        if(task != null){
+            reassignLogService.log(task, sender, toUser);
+            redirectAttributes.addFlashAttribute("msg",
+                "Task reassigned to " + toUser.getName() + " and locked for you.");
+        }
         return "redirect:/user/tasks";
     }
+
+
     
     @PostMapping("/tasks/forward")
-    public String forwardTask(@RequestParam int taskId,
-                              @RequestParam int newUserId,
+    public String forwardTask(@RequestParam Integer taskId,
+                              @RequestParam Integer newUserId,
                               HttpSession session,
                               RedirectAttributes redirectAttributes) {
-        User u = (User) session.getAttribute("user");
-        if(u == null) return "redirect:/login";
+        User sender = (User) session.getAttribute("user");
+        if(sender == null) return "redirect:/login";
 
-        taskService.forwardTask(taskId, newUserId);
-
-        redirectAttributes.addFlashAttribute("msg", "✅ Task forwarded successfully!");
+        Task t = taskService.forwardAndLockSender(taskId, newUserId, sender.getId());
+        if(t != null){
+            User toUser = userService.byId(newUserId);
+            reassignLogService.log(t, sender, toUser);
+        }
+        redirectAttributes.addFlashAttribute("msg", "✅ Task forwarded and locked for you!");
         return "redirect:/user/tasks";
     }
 
 
     @PostMapping("/tasks/status")
-    public String updateStatus(@RequestParam int taskId, @RequestParam String status, HttpSession session){
+    public String updateStatus(@RequestParam Integer taskId, @RequestParam String status, HttpSession session){
         User u = (User) session.getAttribute("user");
         if(u == null){ return "redirect:/login"; }
+
+        Task t = taskService.byId(taskId);
+        if(t != null && t.isLockedForUser(u.getId())){
+            // user locked: cannot act
+            return "redirect:/user/tasks";
+        }
+
         taskService.updateStatus(taskId, status);
         return "redirect:/user/tasks";
     }
 
     @PostMapping("/tasks/comment")
-    public String addComment(@RequestParam int taskId, @RequestParam String content, HttpSession session){
+    public String addComment(@RequestParam Integer taskId, @RequestParam String content, HttpSession session){
         User u = (User) session.getAttribute("user");
         if(u == null){ return "redirect:/login"; }
+
         Task t = taskService.byId(taskId);
+        if(t != null && t.isLockedForUser(u.getId())){
+            // user locked: cannot act
+            return "redirect:/user/tasks";
+        }
+
         if(t != null){
             commentService.add(t, u, content);
         }

@@ -24,21 +24,38 @@ public class TaskDAO {
         return sessionFactory.getCurrentSession().get(Task.class, id);
     }
 
+    public void delete(Task task){
+    	sessionFactory.getCurrentSession().delete(task);
+    }
+    
+//    public List<Task> findAll(){
+//        return sessionFactory.getCurrentSession().createQuery("from Task", Task.class).list();
+//    }
+//
+//    public List<Task> findByUser(User user) {
+//        Session session = sessionFactory.getCurrentSession();
+//        String hql = "select distinct t from Task t join t.users u where u = :u";
+//        return session.createQuery(hql, Task.class)
+//                      .setParameter("u", user)
+//                      .getResultList();
+//    }
     public List<Task> findAll(){
-        return sessionFactory.getCurrentSession().createQuery("from Task", Task.class).list();
+        String hql = "from Task t where t.permanentlyFinished = false";
+        return sessionFactory.getCurrentSession().createQuery(hql, Task.class).list();
     }
 
     public List<Task> findByUser(User user) {
         Session session = sessionFactory.getCurrentSession();
-        String hql = "select distinct t from Task t join t.users u where u = :u";
+        String hql = "select distinct t from Task t join t.users u " +
+                     "where u = :u and t.permanentlyFinished = false";
         return session.createQuery(hql, Task.class)
                       .setParameter("u", user)
                       .getResultList();
     }
+
     
-    public void delete(Task task){
-        sessionFactory.getCurrentSession().delete(task);
-    }
+    
+    
 
     
 }

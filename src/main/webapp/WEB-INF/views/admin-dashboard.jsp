@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <jsp:include page="_header.jsp"/>
 
 <link rel="stylesheet" href="<c:url value='/assets/css/common.css'/>">
@@ -7,6 +8,7 @@
 
 <button><a href="<c:url value='/admin/tasks/allocate'/>">Allocate Task</a></button>
 <button><a href="<c:url value='/admin/users'/>">Users</a></button>
+<button><a href="<c:url value='/admin/notification'/>">Notifcation</a></button>
 
 
 
@@ -19,10 +21,6 @@
   <li>Completed: ${completedCount}</li>
   <li>Delayed: ${delayedCount}</li>
 </ul>
-
-
-
-
 
 
 
