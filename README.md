@@ -43,7 +43,7 @@ Delete users.
 
 Task Management
 
-Allocate tasks to users.
+Allocate tasks to Multiple users.
 
 Update tasks (status, description, deadlines).
 
