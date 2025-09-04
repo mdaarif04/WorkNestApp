@@ -51,7 +51,7 @@ Reassign tasks between users.
 
 Resume a paused/locked task.
 
-Permanently finish (close) a task.
+Permanently finish (close) a task. (Soft delete )
 
 Notifications
 
